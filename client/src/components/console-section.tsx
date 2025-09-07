@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { isUnauthorizedError } from "@/lib/authUtils";
 import { Send } from "lucide-react";
 import type { ChatMessage, InsertChatMessage } from "@shared/schema";
 
@@ -23,7 +24,18 @@ export default function ConsoleSection() {
       queryClient.invalidateQueries({ queryKey: ["/api/chat/messages"] });
       setChatInput("");
     },
-    onError: () => {
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
       toast({
         title: "Error",
         description: "Failed to send message. Please try again.",
