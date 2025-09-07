@@ -1,14 +1,13 @@
+import logoImage from '@assets/ChatGPT Image Sep 7, 2025, 08_37_56 PM_1757257689171.png';
+
 export default function Landing() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted">
       <div className="max-w-2xl mx-auto text-center px-4">
         <div className="mb-8">
-          <div className="w-20 h-20 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
-            <span className="text-primary-foreground font-bold text-2xl">TN</span>
+          <div className="w-32 h-32 mx-auto mb-6">
+            <img src={logoImage} alt="TALKING NOTES" className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-5xl font-light text-foreground mb-4 tracking-tight">
-            TALKING NOTES
-          </h1>
           <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
             A safe space for your thoughts, emotions, and creative expression. 
             Write notes, create poems, and find comfort through conversation.

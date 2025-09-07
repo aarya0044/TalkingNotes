@@ -2,6 +2,7 @@ import { useState } from "react";
 import { LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import type { User } from "@shared/schema";
+import logoImage from '@assets/ChatGPT Image Sep 7, 2025, 08_37_56 PM_1757257689171.png';
 import NotesSection from "@/components/notes-section";
 import PoemsSection from "@/components/poems-section";
 import ConsoleSection from "@/components/console-section";
@@ -18,11 +19,10 @@ export default function Home() {
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">TN</span>
+              <div className="w-12 h-12">
+                <img src={logoImage} alt="TALKING NOTES" className="w-full h-full object-contain" />
               </div>
               <div>
-                <h1 className="text-2xl font-semibold text-foreground tracking-tight">TALKING NOTES</h1>
                 {userData && (
                   <p className="text-sm text-muted-foreground">Welcome back, {userData.firstName || userData.email || 'Friend'}</p>
                 )}
