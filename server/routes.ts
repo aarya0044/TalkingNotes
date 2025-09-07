@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertNoteSchema, insertPoemSchema, insertChatMessageSchema } from "@shared/schema";
 
 const comfortingResponses = [
@@ -52,19 +53,35 @@ function getComfortingResponse(userMessage: string): string {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Notes routes
-  app.get("/api/notes", async (req, res) => {
+  // Auth middleware
+  await setupAuth(app);
+
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const notes = await storage.getNotes();
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+  // Notes routes
+  app.get("/api/notes", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const notes = await storage.getNotes(userId);
       res.json(notes);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch notes" });
     }
   });
 
-  app.get("/api/notes/:id", async (req, res) => {
+  app.get("/api/notes/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const note = await storage.getNote(req.params.id);
+      const userId = req.user.claims.sub;
+      const note = await storage.getNote(req.params.id, userId);
       if (!note) {
         return res.status(404).json({ message: "Note not found" });
       }
@@ -74,20 +91,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/notes", async (req, res) => {
+  app.post("/api/notes", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
       const validatedData = insertNoteSchema.parse(req.body);
-      const note = await storage.createNote(validatedData);
+      const note = await storage.createNote(validatedData, userId);
       res.status(201).json(note);
     } catch (error) {
       res.status(400).json({ message: "Invalid note data" });
     }
   });
 
-  app.patch("/api/notes/:id", async (req, res) => {
+  app.patch("/api/notes/:id", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
       const validatedData = insertNoteSchema.partial().parse(req.body);
-      const note = await storage.updateNote(req.params.id, validatedData);
+      const note = await storage.updateNote(req.params.id, userId, validatedData);
       if (!note) {
         return res.status(404).json({ message: "Note not found" });
       }
@@ -97,9 +116,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/notes/:id", async (req, res) => {
+  app.delete("/api/notes/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const deleted = await storage.deleteNote(req.params.id);
+      const userId = req.user.claims.sub;
+      const deleted = await storage.deleteNote(req.params.id, userId);
       if (!deleted) {
         return res.status(404).json({ message: "Note not found" });
       }
@@ -110,18 +130,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Poems routes
-  app.get("/api/poems", async (req, res) => {
+  app.get("/api/poems", isAuthenticated, async (req: any, res) => {
     try {
-      const poems = await storage.getPoems();
+      const userId = req.user.claims.sub;
+      const poems = await storage.getPoems(userId);
       res.json(poems);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch poems" });
     }
   });
 
-  app.get("/api/poems/:id", async (req, res) => {
+  app.get("/api/poems/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const poem = await storage.getPoem(req.params.id);
+      const userId = req.user.claims.sub;
+      const poem = await storage.getPoem(req.params.id, userId);
       if (!poem) {
         return res.status(404).json({ message: "Poem not found" });
       }
@@ -131,20 +153,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/poems", async (req, res) => {
+  app.post("/api/poems", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
       const validatedData = insertPoemSchema.parse(req.body);
-      const poem = await storage.createPoem(validatedData);
+      const poem = await storage.createPoem(validatedData, userId);
       res.status(201).json(poem);
     } catch (error) {
       res.status(400).json({ message: "Invalid poem data" });
     }
   });
 
-  app.patch("/api/poems/:id", async (req, res) => {
+  app.patch("/api/poems/:id", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
       const validatedData = insertPoemSchema.partial().parse(req.body);
-      const poem = await storage.updatePoem(req.params.id, validatedData);
+      const poem = await storage.updatePoem(req.params.id, userId, validatedData);
       if (!poem) {
         return res.status(404).json({ message: "Poem not found" });
       }
@@ -154,9 +178,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/poems/:id", async (req, res) => {
+  app.delete("/api/poems/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const deleted = await storage.deletePoem(req.params.id);
+      const userId = req.user.claims.sub;
+      const deleted = await storage.deletePoem(req.params.id, userId);
       if (!deleted) {
         return res.status(404).json({ message: "Poem not found" });
       }
@@ -167,19 +192,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Chat routes
-  app.get("/api/chat/messages", async (req, res) => {
+  app.get("/api/chat/messages", isAuthenticated, async (req: any, res) => {
     try {
-      const messages = await storage.getChatMessages();
+      const userId = req.user.claims.sub;
+      const messages = await storage.getChatMessages(userId);
       res.json(messages);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch chat messages" });
     }
   });
 
-  app.post("/api/chat/messages", async (req, res) => {
+  app.post("/api/chat/messages", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
       const validatedData = insertChatMessageSchema.parse(req.body);
-      const userMessage = await storage.createChatMessage(validatedData);
+      const userMessage = await storage.createChatMessage(validatedData, userId);
       
       // Generate comforting response
       if (validatedData.isUser === 'true') {
@@ -187,7 +214,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const botMessage = await storage.createChatMessage({
           message: comfortResponse,
           isUser: 'false'
-        });
+        }, userId);
         
         res.status(201).json({ userMessage, botMessage });
       } else {
@@ -198,9 +225,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/chat/messages", async (req, res) => {
+  app.delete("/api/chat/messages", isAuthenticated, async (req: any, res) => {
     try {
-      await storage.clearChatHistory();
+      const userId = req.user.claims.sub;
+      await storage.clearChatHistory(userId);
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ message: "Failed to clear chat history" });
