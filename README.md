@@ -1,7 +1,8 @@
 # 📝 Talking Notes
 
 **Talking Notes** is a minimal and elegant web app where users can write their thoughts, feelings, or poems in a distraction-free space.  
-Inspired by how people often use their phone's notes app to express emotions, this app provides a safe, personal, and creative platform to store stories securely.  
+Inspired by how people often use their phone's notes app to express emotions, this app provides a safe, personal, and creative platform to store stories securely. 
+URL- https://c969c68b-15f9-432c-8e02-085216ecf354-00-1vu572ufesfg5.spock.replit.dev/
 
 ---
 
